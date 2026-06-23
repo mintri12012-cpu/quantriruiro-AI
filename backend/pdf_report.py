@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import datetime
 
 from reportlab.lib import colors
@@ -9,8 +10,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import ParagraphStyle
 
-pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
-pdfmetrics.registerFont(TTFont('Arial-Bold', 'C:/Windows/Fonts/arialbd.ttf'))
+FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
+# Dung Noto Sans (thay vi font he thong Windows) de PDF chay duoc tren moi OS, ca server Linux khi deploy.
+pdfmetrics.registerFont(TTFont('Arial', os.path.join(FONTS_DIR, 'NotoSans-Regular.ttf')))
+pdfmetrics.registerFont(TTFont('Arial-Bold', os.path.join(FONTS_DIR, 'NotoSans-Bold.ttf')))
 
 RISK_COLOR = {'Thấp': colors.HexColor('#16a34a'), 'Trung bình': colors.HexColor('#ea580c'), 'Cao': colors.HexColor('#dc2626')}
 
