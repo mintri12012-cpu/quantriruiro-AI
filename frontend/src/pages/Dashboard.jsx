@@ -8,20 +8,29 @@ import TimeSeriesChart from '../components/TimeSeriesChart'
 
 const FIELD_GROUPS = [
   { title: 'Thanh khoản', fields: [
-    ['current_ratio', 'Current Ratio'], ['quick_ratio', 'Quick Ratio'], ['cash_ratio', 'Cash Ratio'],
+    ['current_ratio', 'Current Ratio (khả năng thanh toán)'],
+    ['quick_ratio', 'Quick Ratio (thanh toán nhanh)'],
+    ['cash_ratio', 'Cash Ratio (tỷ lệ tiền mặt)'],
   ] },
   { title: 'Đòn bẩy', fields: [
-    ['de_ratio', 'D/E Ratio'], ['da_ratio', 'D/A Ratio'], ['interest_coverage', 'Interest Coverage'],
+    ['de_ratio', 'D/E Ratio (nợ/vốn chủ)'],
+    ['da_ratio', 'D/A Ratio (nợ/tài sản)'],
+    ['interest_coverage', 'Interest Coverage (khả năng trả lãi)'],
   ] },
   { title: 'Hoạt động', fields: [
-    ['asset_turnover', 'Asset Turnover'], ['receivable_days', 'Receivable Days'],
+    ['asset_turnover', 'Asset Turnover (vòng quay tài sản)'],
+    ['receivable_days', 'Receivable Days (số ngày thu hồi nợ)'],
   ] },
   { title: 'Dòng tiền', fields: [
-    ['cfo_debt', 'CFO/Debt'], ['cfo_margin', 'CFO Margin'], ['cf_volatility', 'CF Volatility'],
-    ['working_capital_ratio', 'Working Capital Ratio'],
+    ['cfo_debt', 'CFO/Debt (dòng tiền/nợ)'],
+    ['cfo_margin', 'CFO Margin (biên dòng tiền)'],
+    ['cf_volatility', 'CF Volatility (độ biến động dòng tiền)'],
+    ['working_capital_ratio', 'Working Capital Ratio (vốn lưu động)'],
   ] },
   { title: 'Vĩ mô', fields: [
-    ['gdp_growth', 'GDP Growth (%)'], ['lending_rate', 'Lending Rate (%)'], ['cpi', 'CPI (%)'],
+    ['gdp_growth', 'GDP Growth (%) (tăng trưởng GDP)'],
+    ['lending_rate', 'Lending Rate (%) (lãi suất cho vay)'],
+    ['cpi', 'CPI (%) (lạm phát)'],
   ] },
 ]
 
@@ -163,6 +172,16 @@ export default function Dashboard() {
             <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
                 <div className="text-xl font-bold text-white">{current.ten_cong_ty}</div>
+                <button
+                  onClick={() => {
+                    const payload = { ...form }
+                    Object.keys(payload).forEach((k) => {
+                      if (k !== 'ten_cong_ty' && k !== 'nganh') payload[k] = parseFloat(payload[k])
+                    })
+                    api.downloadReportPdf(payload)
+                  }}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-teal/15 text-teal font-semibold hover:bg-teal/25"
+                >📄 Xuất PDF</button>
               </div>
               <div className="flex gap-5 items-center">
                 <GaugeChart percent={current.pd_percent} color={

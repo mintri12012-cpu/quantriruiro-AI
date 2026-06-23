@@ -23,6 +23,22 @@ export const api = {
   }),
   riskSummary: (lgd) => request(`/risk-summary?lgd=${lgd}`),
   riskOverview: () => request('/risk-overview'),
+  compare: (ids) => request(`/compare?ids=${ids.join(',')}`),
+  downloadReportPdf: async (payload) => {
+    const res = await fetch(`${BASE}/report-pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error(`API error ${res.status}`)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bao_cao_${payload.ten_cong_ty}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
   approvals: (status) => request(`/approvals${status ? `?status=${status}` : ''}`),
   updateStatus: (companyId, status) => request(`/approvals/${companyId}`, {
     method: 'POST',

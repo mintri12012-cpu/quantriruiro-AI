@@ -6,6 +6,8 @@ const links = [
   { to: '/approvals', label: 'Phê duyệt HSRR', icon: '✅' },
   { to: '/documents', label: 'Tài liệu', icon: '📁' },
   { to: '/reports', label: 'Báo cáo', icon: '📑' },
+  { to: '/compare', label: 'So sánh', icon: '🕸️' },
+  { to: '/demo', label: 'Xem demo', icon: '▶' },
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/portfolio', label: 'Portfolio', icon: '🗂️' },
   { to: '/alerts', label: 'Alerts', icon: '⚠️' },

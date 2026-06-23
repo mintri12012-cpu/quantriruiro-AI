@@ -15,3 +15,5 @@ beautifulsoup4
 soupsieve
 pytz
 seaborn
+reportlab
+python-multipart

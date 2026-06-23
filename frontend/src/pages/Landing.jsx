@@ -15,12 +15,20 @@ export default function Landing() {
         kết hợp mô hình <span className="text-teal font-semibold">XGBoost + SHAP</span> và{' '}
         <span className="text-teal font-semibold">AI Chatbot</span> hỗ trợ cán bộ tín dụng ngân hàng.
       </p>
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="px-8 py-3 rounded-xl bg-gradient-to-br from-teal to-indigo-500 font-bold text-white shadow-lg hover:opacity-90 transition"
-      >
-        🔍 Bắt đầu phân tích
-      </button>
+      <div className="flex items-center justify-center gap-3">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="px-8 py-3 rounded-xl bg-gradient-to-br from-teal to-indigo-500 font-bold text-white shadow-lg hover:opacity-90 transition"
+        >
+          🔍 Bắt đầu phân tích
+        </button>
+        <button
+          onClick={() => navigate('/demo')}
+          className="px-8 py-3 rounded-xl bg-slate-800 border border-slate-700 font-bold text-white shadow-lg hover:bg-slate-700 transition"
+        >
+          ▶ Xem demo
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-14 text-left">
         <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-5">

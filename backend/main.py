@@ -17,6 +17,8 @@ import pandas as pd
 import shap
 import google.generativeai as genai
 
+from pdf_report import build_credit_report_pdf
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI(title="PD Scoring API")
@@ -162,6 +164,83 @@ def predict(data: CompanyInput):
         "color": color,
         "default_prediction": label,
         "shap_top5": shap_top5,
+    }
+
+
+@app.post("/api/report-pdf")
+def report_pdf(data: CompanyInput):
+    row = pd.Series(data.dict())
+    prob, shap_top5 = score_row(row)
+    risk_level, color = risk_level_of(prob)
+
+    benchmark = None
+    if data.nganh:
+        latest = df_all.sort_values('quarter').groupby('company_id').tail(1)
+        group = latest[latest['nganh'] == data.nganh]
+        if not group.empty:
+            bench_rows = []
+            for feat, label in [('current_ratio', 'Current Ratio'), ('quick_ratio', 'Quick Ratio'),
+                                 ('de_ratio', 'D/E Ratio'), ('cfo_margin', 'CFO Margin'),
+                                 ('asset_turnover', 'Asset Turnover')]:
+                bench_rows.append(((round(getattr(data, feat), 2), round(float(group[feat].median()), 2)), label))
+            benchmark = {"nganh": data.nganh, "rows": bench_rows}
+
+    try:
+        ai_resp = gemini_model.generate_content(
+            f"""Viết 1 đoạn nhận định ngắn (3-4 câu) cho báo cáo tín dụng, văn phong chuyên nghiệp,
+bằng tiếng Việt, không dùng markdown. Doanh nghiệp: {data.ten_cong_ty}, PD score: {prob*100:.2f}%,
+mức rủi ro: {risk_level}, top yếu tố SHAP: {[s['feature'] for s in shap_top5]}."""
+        )
+        ai_comment = ai_resp.text
+    except Exception:
+        ai_comment = None
+
+    pdf_bytes = build_credit_report_pdf({
+        "ten_cong_ty": data.ten_cong_ty, "pd_percent": round(prob * 100, 2),
+        "risk_level": risk_level, "shap_top5": shap_top5, "benchmark": benchmark,
+        "ai_comment": ai_comment,
+    })
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes), media_type='application/pdf',
+        headers={"Content-Disposition": f'attachment; filename="bao_cao_{data.ten_cong_ty}.pdf"'},
+    )
+
+
+COMPARE_FEATURES = [
+    ('current_ratio', 'Thanh khoản', False),
+    ('de_ratio', 'Đòn bẩy (thấp tốt)', True),
+    ('cfo_margin', 'Biên dòng tiền', False),
+    ('asset_turnover', 'Hiệu quả hoạt động', False),
+    ('interest_coverage', 'Khả năng trả lãi', False),
+    ('working_capital_ratio', 'Vốn lưu động', False),
+]
+
+
+@app.get("/api/compare")
+def compare(ids: str):
+    company_ids = [c.strip() for c in ids.split(',') if c.strip()]
+    latest = df_all.sort_values('quarter').groupby('company_id').tail(1).set_index('company_id')
+
+    percentiles = {}
+    for feat, _, invert in COMPARE_FEATURES:
+        pct = latest[feat].rank(pct=True) * 100
+        percentiles[feat] = (100 - pct) if invert else pct
+
+    result = []
+    for cid in company_ids:
+        if cid not in latest.index:
+            continue
+        row = latest.loc[cid]
+        prob, _ = score_row(row)
+        result.append({
+            "company_id": cid,
+            "ten_cong_ty": row['ten_cong_ty'],
+            "pd_percent": round(prob * 100, 2),
+            "scores": {feat: round(float(percentiles[feat].loc[cid]), 1) for feat, _, _ in COMPARE_FEATURES},
+        })
+    return {
+        "labels": [{"key": f, "label": l} for f, l, _ in COMPARE_FEATURES],
+        "companies": result,
     }
 
 

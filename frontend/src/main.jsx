@@ -12,6 +12,8 @@ import Overview from './pages/Overview.jsx'
 import Approvals from './pages/Approvals.jsx'
 import Documents from './pages/Documents.jsx'
 import Reports from './pages/Reports.jsx'
+import Compare from './pages/Compare.jsx'
+import GuidedDemo from './pages/GuidedDemo.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -27,6 +29,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="approvals" element={<Approvals />} />
           <Route path="documents" element={<Documents />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="compare" element={<Compare />} />
+          <Route path="demo" element={<GuidedDemo />} />
         </Route>
       </Routes>
     </BrowserRouter>
