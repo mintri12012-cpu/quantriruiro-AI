@@ -19,7 +19,6 @@ const FIELD_GROUPS = [
   ] },
   { title: 'Hoạt động', fields: [
     ['asset_turnover', 'Asset Turnover (vòng quay tài sản)'],
-    ['receivable_days', 'Receivable Days (số ngày thu hồi nợ)'],
   ] },
   { title: 'Dòng tiền', fields: [
     ['cfo_debt', 'CFO/Debt (dòng tiền/nợ)'],
@@ -37,7 +36,7 @@ const FIELD_GROUPS = [
 const DEFAULTS = {
   ten_cong_ty: 'Cty_Demo_001', nganh: 'San xuat', current_ratio: 1.5, quick_ratio: 1.2, cash_ratio: 0.5,
   de_ratio: 2.0, da_ratio: 0.5, interest_coverage: 3.0, asset_turnover: 0.8,
-  receivable_days: 45, cfo_debt: 0.2, cfo_margin: 0.1, cf_volatility: 0.1,
+  cfo_debt: 0.2, cfo_margin: 0.1, cf_volatility: 0.1,
   working_capital_ratio: 0.25, gdp_growth: 6.5, lending_rate: 9.0, cpi: 4.0,
 }
 

@@ -15,14 +15,16 @@ def main():
     y_train, y_test = npz['y_train'], npz['y_test']
     features = joblib.load('models/features.pkl')
 
+    scale_pos_weight = (y_train == 0).sum() / max((y_train == 1).sum(), 1)
     model = XGBClassifier(
-        n_estimators=80,
+        n_estimators=150,
         learning_rate=0.05,
-        max_depth=3,
-        min_child_weight=6,
-        reg_lambda=3.0,
-        subsample=0.8,
-        colsample_bytree=0.8,
+        max_depth=4,
+        min_child_weight=1,
+        reg_lambda=1.5,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        scale_pos_weight=scale_pos_weight,
         eval_metric='logloss',
         random_state=42,
     )

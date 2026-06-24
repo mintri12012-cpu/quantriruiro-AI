@@ -92,7 +92,6 @@ class CompanyInput(BaseModel):
     da_ratio: float
     interest_coverage: float
     asset_turnover: float
-    receivable_days: float
     cfo_debt: float
     cfo_margin: float
     cf_volatility: float

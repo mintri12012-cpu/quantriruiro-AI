@@ -13,7 +13,7 @@ DATA_PATH = 'data/du_lieu.csv'
 
 FEATURES = [
     'current_ratio', 'quick_ratio', 'cash_ratio', 'de_ratio', 'da_ratio',
-    'interest_coverage', 'asset_turnover', 'receivable_days', 'cfo_debt',
+    'interest_coverage', 'asset_turnover', 'cfo_debt',
     'cfo_margin', 'cf_volatility', 'gdp_growth', 'lending_rate', 'cpi',
     'working_capital_ratio',
 ]

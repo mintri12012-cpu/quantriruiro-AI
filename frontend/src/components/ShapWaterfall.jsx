@@ -2,7 +2,7 @@ const FEATURE_LABELS = {
   current_ratio: 'Current Ratio (thanh toán)', quick_ratio: 'Quick Ratio (thanh toán nhanh)',
   cash_ratio: 'Cash Ratio (tiền mặt)', de_ratio: 'D/E Ratio (nợ/vốn chủ)',
   da_ratio: 'D/A Ratio (nợ/tài sản)', interest_coverage: 'Interest Coverage (trả lãi)',
-  asset_turnover: 'Asset Turnover (vòng quay TS)', receivable_days: 'Receivable Days (ngày thu nợ)',
+  asset_turnover: 'Asset Turnover (vòng quay TS)',
   cfo_debt: 'CFO/Debt (dòng tiền/nợ)', cfo_margin: 'CFO Margin (biên dòng tiền)',
   cf_volatility: 'CF Volatility (biến động dòng tiền)', gdp_growth: 'GDP Growth (tăng trưởng GDP)',
   lending_rate: 'Lending Rate (lãi suất)', cpi: 'CPI (lạm phát)',
