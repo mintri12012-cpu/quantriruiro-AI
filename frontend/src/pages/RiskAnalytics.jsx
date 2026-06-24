@@ -43,8 +43,8 @@ export default function RiskAnalytics() {
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <label>LGD (Loss Given Default)</label>
             <input
-              type="number" step="0.05" min="0.1" max="0.9" value={lgd}
-              onChange={(e) => setLgd(parseFloat(e.target.value) || 0.45)}
+              type="text" inputMode="decimal" value={lgd}
+              onChange={(e) => setLgd(parseFloat(e.target.value.replace(',', '.')) || 0.45)}
               className="w-20 px-2 py-1 bg-slate-900 border border-slate-700 rounded text-white"
             />
           </div>

@@ -100,7 +100,9 @@ export default function Dashboard() {
     e.preventDefault()
     const payload = { ...form }
     Object.keys(payload).forEach((k) => {
-      if (k !== 'ten_cong_ty' && k !== 'nganh') payload[k] = parseFloat(payload[k])
+      if (k !== 'ten_cong_ty' && k !== 'nganh') {
+        payload[k] = parseFloat(String(payload[k]).replace(',', '.')) || 0
+      }
     })
     runPredict(payload, companyId)
   }
@@ -141,7 +143,7 @@ export default function Dashboard() {
                 <div key={key}>
                   <label className="block text-[11px] text-slate-400 mb-1">{label}</label>
                   <input
-                    type="number" step="0.01"
+                    type="text" inputMode="decimal"
                     value={form[key]}
                     onChange={(e) => update(key, e.target.value)}
                     className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm outline-none focus:border-teal"
@@ -176,7 +178,9 @@ export default function Dashboard() {
                   onClick={() => {
                     const payload = { ...form }
                     Object.keys(payload).forEach((k) => {
-                      if (k !== 'ten_cong_ty' && k !== 'nganh') payload[k] = parseFloat(payload[k])
+                      if (k !== 'ten_cong_ty' && k !== 'nganh') {
+                        payload[k] = parseFloat(String(payload[k]).replace(',', '.')) || 0
+                      }
                     })
                     api.downloadReportPdf(payload)
                   }}
