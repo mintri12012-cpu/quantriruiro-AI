@@ -8,12 +8,17 @@ import numpy as np
 import pandas as pd
 
 RAW_PATH = 'data/raw_bctc_quarterly.csv'
+MACRO_PATH = 'data/macro.csv'
 OUT_PATH = 'data/du_lieu.csv'
 
-# Vi mo Viet Nam theo quy thuc te (GDP growth %, lending rate %, CPI %)
+# Vi mo Viet Nam theo quy. data/macro.csv chi co so thuc nam 2022-2024 (GDP 8.02/5.05/7.09,
+# lending rate 9.0/8.5/7.5 giam dan, CPI 3.15/3.25/3.63 tang dan) - khong co quy nao trong
+# pham vi 2025-Q2..2026-Q1 can dung, nen 4 quy duoi day la NEO theo xu huong thuc te do
+# (lending rate tiep tuc giam, CPI tiep tuc tang nhe, GDP huong theo muc tieu Chinh phu ~7-8%),
+# khong phai so lieu quy thuc.
 MACRO_BY_QUARTER = {
-    '2025-Q2': (7.1, 8.7, 3.9), '2025-Q3': (7.6, 8.9, 4.1),
-    '2025-Q4': (7.8, 9.1, 4.3), '2026-Q1': (7.5, 8.8, 4.0),
+    '2025-Q2': (7.2, 7.0, 3.7), '2025-Q3': (7.4, 6.8, 3.8),
+    '2025-Q4': (7.6, 6.6, 3.9), '2026-Q1': (7.5, 6.5, 4.0),
 }
 
 FEATURE_COLUMNS = [
