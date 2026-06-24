@@ -23,17 +23,30 @@ FEATURE_COLUMNS = [
 ]
 
 
+def safe_div(a, b):
+    """Chia an toan: tranh loi chia cho 0 / NaN (theo cach lam cua feature_engineering.py mau)."""
+    b = b.replace(0, np.nan) if hasattr(b, 'replace') else (np.nan if b == 0 else b)
+    return a / b
+
+
 def altman_z(row):
+    """Tinh tren gia tri da lam muot (rolling 4-quy) neu co, de tranh 1 quy
+    bien dong bat thuong lam doanh nghiep bi gan nham nhan rui ro cao."""
+    def g(name):
+        smooth_name = f'{name}_smooth'
+        return row[smooth_name] if smooth_name in row.index and pd.notna(row[smooth_name]) else row[name]
+
+    de_ratio = g('de_ratio')
     # de_ratio co the am (von chu so huu am o cong ty kiet que) -> tranh mau so gan 0
-    de_denom = row['de_ratio'] + 0.1
+    de_denom = de_ratio + 0.1
     de_denom = de_denom if abs(de_denom) > 1.0 else (1.0 if de_denom >= 0 else -1.0)
     return (
-        3.3 * row['cfo_margin'] +
-        1.0 * row['asset_turnover'] +
+        3.3 * g('cfo_margin') +
+        1.0 * g('asset_turnover') +
         0.6 * (1 / de_denom) +
-        1.4 * row['cfo_debt'] +
-        1.2 * (row['quick_ratio'] / de_denom) +
-        0.8 * row['working_capital_ratio'] +
+        1.4 * g('cfo_debt') +
+        1.2 * (g('quick_ratio') / de_denom) +
+        0.8 * g('working_capital_ratio') +
         0.15 * (row['gdp_growth'] - 7.0) -
         0.12 * (row['lending_rate'] - 9.0)
     )
@@ -48,27 +61,49 @@ def z_to_label(z, rng):
     return int(rng.random() < p_distress)
 
 
+CORE_RATIOS_FOR_LABEL = ['cfo_margin', 'de_ratio', 'asset_turnover', 'cfo_debt', 'quick_ratio', 'working_capital_ratio']
+
+
 def build_real_companies():
     raw = pd.read_csv(RAW_PATH)
-    raw = raw.sort_values(['ticker', 'quarter'])
+    raw = raw.sort_values(['ticker', 'quarter']).reset_index(drop=True)
 
-    raw['current_ratio'] = raw['tsnh'] / raw['no_nh']
-    raw['quick_ratio'] = (raw['tsnh'] - raw['hang_ton_kho']) / raw['no_nh']
-    raw['cash_ratio'] = raw['tien'] / raw['no_nh']
-    raw['de_ratio'] = raw['no_phai_tra'] / raw['vcsh']
-    raw['da_ratio'] = raw['no_phai_tra'] / raw['tong_ts']
+    raw['current_ratio'] = safe_div(raw['tsnh'], raw['no_nh'])
+    raw['quick_ratio'] = safe_div(raw['tsnh'] - raw['hang_ton_kho'], raw['no_nh'])
+    raw['cash_ratio'] = safe_div(raw['tien'], raw['no_nh'])
+    raw['de_ratio'] = safe_div(raw['no_phai_tra'], raw['vcsh'])
+    raw['da_ratio'] = safe_div(raw['no_phai_tra'], raw['tong_ts'])
     ebit = raw['ebt'] + raw['lai_vay'].abs()
     # Khong vay -> chi phi lai vay = 0 -> coverage vo han, gan tran an toan thay vi NaN
-    raw['interest_coverage'] = (ebit / raw['lai_vay'].abs().replace(0, np.nan)).fillna(50.0)
-    raw['asset_turnover'] = (raw['doanh_thu'] * 4) / raw['tong_ts']
-    raw['receivable_days'] = (raw['phai_thu_kh'] / raw['doanh_thu'].replace(0, np.nan)) * 90
-    raw['cfo_debt'] = raw['cfo'] / raw['no_phai_tra']
-    raw['cfo_margin'] = raw['cfo'] / raw['doanh_thu'].replace(0, np.nan)
-    raw['working_capital_ratio'] = (raw['tsnh'] - raw['no_nh']) / raw['tong_ts']
+    raw['interest_coverage'] = safe_div(ebit, raw['lai_vay'].abs()).fillna(50.0)
+    raw['asset_turnover'] = safe_div(raw['doanh_thu'] * 4, raw['tong_ts'])
+    raw['receivable_days'] = safe_div(raw['phai_thu_kh'], raw['doanh_thu']) * 90
+    raw['cfo_debt'] = safe_div(raw['cfo'], raw['no_phai_tra'])
+    raw['cfo_margin'] = safe_div(raw['cfo'], raw['doanh_thu'])
+    raw['working_capital_ratio'] = safe_div(raw['tsnh'] - raw['no_nh'], raw['tong_ts'])
 
     cf_vol = raw.groupby('ticker')['cfo_margin'].std().rename('cf_volatility')
     raw = raw.merge(cf_vol, on='ticker', how='left')
-    raw['cf_volatility'] = raw['cf_volatility'].fillna(0.05)
+
+    raw = raw.replace([np.inf, -np.inf], np.nan)
+
+    # --- Median imputation (theo cach lam cua feature_engineering.py mau) ---
+    # On dinh hon dien gia tri co dinh tuy tien: cac ty so tai chinh thuong lech
+    # phan phoi va nhieu outlier (vd cong ty kiet que co de_ratio rat lon).
+    impute_cols = FEATURE_COLUMNS + ['cf_volatility']
+    for col in impute_cols:
+        if col in raw.columns and raw[col].isna().any():
+            raw[col] = raw[col].fillna(raw[col].median())
+
+    # --- Rolling 4-quy mean cho cac ty so cot loi dung de tinh nhan ---
+    # Y nghia: 1 quy bien dong manh (vd doanh thu thoi vu) khong nen lam doanh
+    # nghiep vi bi gan nham nhan rui ro cao - lam muot truoc khi tinh Altman-Z.
+    raw = raw.sort_values(['ticker', 'quarter']).reset_index(drop=True)
+    grouped = raw.groupby('ticker')
+    for col in CORE_RATIOS_FOR_LABEL:
+        raw[f'{col}_smooth'] = grouped[col].transform(
+            lambda s: s.rolling(window=4, min_periods=1).mean()
+        )
 
     # Du lieu thuc co outlier (vd von chu so huu am o cong ty kiet que) -> clip ve khoang hop ly
     # de tranh lam vo cong thuc Altman-Z va lam meo scaler, nhung van giu duoc tin hieu rui ro.
@@ -80,6 +115,8 @@ def build_real_companies():
     }
     for col, (lo, hi) in CLIP_BOUNDS.items():
         raw[col] = raw[col].clip(lo, hi)
+        if f'{col}_smooth' in raw.columns:
+            raw[f'{col}_smooth'] = raw[f'{col}_smooth'].clip(lo, hi)
 
     raw['gdp_growth'] = raw['quarter'].map(lambda q: MACRO_BY_QUARTER.get(q, (7.0, 9.0, 4.0))[0])
     raw['lending_rate'] = raw['quarter'].map(lambda q: MACRO_BY_QUARTER.get(q, (7.0, 9.0, 4.0))[1])
@@ -89,7 +126,8 @@ def build_real_companies():
     raw['ten_cong_ty'] = raw['ticker']
     raw['is_demo'] = False
 
-    keep = ['company_id', 'ten_cong_ty', 'nganh', 'quarter', 'is_demo'] + FEATURE_COLUMNS
+    smooth_cols = [f'{c}_smooth' for c in CORE_RATIOS_FOR_LABEL]
+    keep = ['company_id', 'ten_cong_ty', 'nganh', 'quarter', 'is_demo'] + FEATURE_COLUMNS + smooth_cols
     df = raw[keep].copy()
     df = df.replace([np.inf, -np.inf], np.nan).dropna(subset=FEATURE_COLUMNS)
     return df
